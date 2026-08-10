@@ -1,0 +1,56 @@
+{
+  "Methylene Blue": {
+    "name": "Methylene Blue",
+    "min_wavelength": 500.0,
+    "max_wavelength": 750.0,
+    "baseline_left": 540.0,
+    "baseline_right": 725.0,
+    "num_peaks": 2,
+    "peak_guesses": [612.0, 664.0]
+  },
+  "Methyl Orange": {
+    "name": "Methyl Orange",
+    "min_wavelength": 320.0,
+    "max_wavelength": 600.0,
+    "baseline_left": 350.0,
+    "baseline_right": 550.0,
+    "num_peaks": 2,
+    "peak_guesses": [380.0, 464.0]
+  },
+  "Rhodamine B": {
+    "name": "Rhodamine B",
+    "min_wavelength": 450.0,
+    "max_wavelength": 650.0,
+    "baseline_left": 480.0,
+    "baseline_right": 620.0,
+    "num_peaks": 2,
+    "peak_guesses": [515.0, 554.0]
+  },
+  "Fluorescein": {
+    "name": "Fluorescein",
+    "min_wavelength": 400.0,
+    "max_wavelength": 600.0,
+    "baseline_left": 430.0,
+    "baseline_right": 560.0,
+    "num_peaks": 2,
+    "peak_guesses": [455.0, 490.0]
+  },
+  "Crystal Violet": {
+    "name": "Crystal Violet",
+    "min_wavelength": 450.0,
+    "max_wavelength": 700.0,
+    "baseline_left": 490.0,
+    "baseline_right": 660.0,
+    "num_peaks": 2,
+    "peak_guesses": [540.0, 590.0]
+  },
+  "Congo Red": {
+    "name": "Congo Red",
+    "min_wavelength": 350.0,
+    "max_wavelength": 650.0,
+    "baseline_left": 380.0,
+    "baseline_right": 590.0,
+    "num_peaks": 2,
+    "peak_guesses": [450.0, 497.0]
+  }
+}
