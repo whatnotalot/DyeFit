@@ -58,74 +58,103 @@ if "show_warning" not in st.session_state:
 # =============================================================================
 # Set page configuration for professional design and iframe responsiveness
 st.set_page_config(
-    page_title="DyeFit - Dye Deconvolution & Fitting",
+    page_title="DyeFit v0.3 - Dye Deconvolution & Fitting",
     page_icon="🧪",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Inject custom CSS styles for cards and typography (premium dark-theme aesthetics)
+# Inject custom CSS styles for Dyefit v0.3 (Modern Light Theme aesthetics)
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
     }
 
+    .stApp {
+        background-color: #F8FAFC;
+    }
+
     .metric-card {
-        background: rgba(31, 41, 55, 0.45);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: #FFFFFF;
         border-radius: 12px;
-        padding: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        margin-bottom: 12px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        padding: 18px;
+        border: 1px solid #E2E8F0;
+        margin-bottom: 14px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
     .metric-card:hover {
-        transform: translateY(-4px) scale(1.02);
-        background: rgba(31, 41, 55, 0.6);
-        border-color: rgba(0, 210, 255, 0.6);
-        box-shadow: 0 12px 40px 0 rgba(0, 210, 255, 0.18);
+        transform: translateY(-3px);
+        border-color: #2563EB;
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
     }
+
     .custom-title {
-        color: #00D2FF;
+        color: #1E293B;
         font-family: 'Outfit', 'Inter', sans-serif;
         font-weight: 700;
+        font-size: 2.3rem;
         margin-bottom: 0px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .version-badge {
+        background: #EFF6FF;
+        color: #2563EB;
+        border: 1px solid #BFDBFE;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        vertical-align: middle;
     }
     .custom-subtitle {
-        color: #9CA3AF;
+        color: #64748B;
         font-family: 'Inter', sans-serif;
         font-weight: 500;
-        font-size: 1.2rem;
-        margin-top: -5px;
-        margin-bottom: 20px;
+        font-size: 1.1rem;
+        margin-top: 2px;
+        margin-bottom: 22px;
     }
     
     /* Button micro-animations */
     .stButton>button {
-        transition: all 0.3s ease;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.25s ease;
     }
     .stButton>button:hover {
-        transform: scale(1.05);
-        filter: brightness(1.1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
-    /* Tab micro-animations */
+    /* Tab bar styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
     .stTabs [data-baseweb="tab-list"] button {
-        transition: color 0.2s ease, background-color 0.2s ease;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 600;
+        color: #64748B;
+        transition: all 0.2s ease;
     }
     .stTabs [data-baseweb="tab-list"] button:hover {
-        color: #00D2FF;
+        color: #2563EB;
+        background-color: #EFF6FF;
+    }
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+        color: #2563EB !important;
+        background-color: #EFF6FF !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # Detect if the app is embedded inside an iframe (e.g. in a WordPress page)
-# (Try-except block ensures compatibility with older local Streamlit and newer cloud servers)
 is_embedded = False
 try:
     if hasattr(st, "query_params"):
@@ -136,8 +165,8 @@ except Exception:
     pass
 
 if not is_embedded:
-    st.markdown("<h1 class='custom-title'>🧪 DyeFit</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='custom-subtitle'>Spectroscopic Fitting Agent</p>", unsafe_allow_html=True)
+    st.markdown("<h1 class='custom-title'>🧪 Dyefit <span class='version-badge'>v0.3</span></h1>", unsafe_allow_html=True)
+    st.markdown("<p class='custom-subtitle'>Spectroscopic Baseline Correction & Peak Deconvolution Workbench</p>", unsafe_allow_html=True)
     
     with st.expander("📖 How to Use & Scientific Guide", expanded=False):
         st.markdown("""
@@ -152,7 +181,7 @@ if not is_embedded:
         """)
 else:
     # Minimalist header for clean iframe rendering
-    st.markdown("<h3 class='custom-title'>🧪 DyeFit Analyzer</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 class='custom-title'>🧪 Dyefit Analyzer <span class='version-badge'>v0.3</span></h3>", unsafe_allow_html=True)
 
 # Render dismissible session notice
 if st.session_state.get("show_warning", True) and not is_embedded:
@@ -465,8 +494,13 @@ if uploaded_df is not None:
     
     st.sidebar.markdown("---")
     st.sidebar.header("🎨 4. Chart Style Settings")
-    theme_choice = st.sidebar.radio("Plotly Chart Style", ["Web Dark", "Publication Light"])
-    plotly_theme = "publication_light" if theme_choice == "Publication Light" else "dark"
+    theme_choice = st.sidebar.radio("Plotly Chart Style", ["Clean Light (Default)", "Publication Light", "Web Dark"])
+    if theme_choice == "Publication Light":
+        plotly_theme = "publication_light"
+    elif theme_choice == "Web Dark":
+        plotly_theme = "dark"
+    else:
+        plotly_theme = "light"
     
     # =============================================================================
     # 7. MAIN INTERFACE TABS
@@ -482,7 +516,7 @@ if uploaded_df is not None:
         
         # Setup colors based on dynamic Plotly theme
         if plotly_theme == "publication_light":
-            raw_color = "#9CA3AF"  
+            raw_color = "#64748B"  
             base_color = "#D55E00" 
             corr_color = "#000000" 
             bg_color = "#FFFFFF"
@@ -491,7 +525,17 @@ if uploaded_df is not None:
             text_color = "#111827"
             border_color = "#111827"
             layout_w_h = dict(width=580, height=435) 
-        else:
+        elif plotly_theme == "light":
+            raw_color = "#94A3B8"  
+            base_color = "#D97706" 
+            corr_color = "#2563EB" 
+            bg_color = "#FFFFFF"
+            paper_bg = "#FFFFFF"
+            grid_color = "#E2E8F0"
+            text_color = "#0F172A"
+            border_color = "#94A3B8"
+            layout_w_h = dict()
+        else: # dark
             raw_color = "#CCCCCC"
             base_color = "#FFC700"
             corr_color = "#00D2FF"
@@ -513,7 +557,7 @@ if uploaded_df is not None:
             yaxis_title="Absorbance",
             paper_bgcolor=paper_bg,
             plot_bgcolor=bg_color,
-            font=dict(family="Arial, Helvetica, sans-serif", size=11, color=text_color),
+            font=dict(family="Inter, Arial, sans-serif", size=11, color=text_color),
             margin=dict(l=50, r=40, t=80, b=50),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
@@ -549,15 +593,15 @@ if uploaded_df is not None:
                 r2 = calculate_r_squared(abs_corrected, y_fitted)
                 rmse = calculate_rmse(abs_corrected, y_fitted)
                 
-                # HTML Card outputs for fitting metrics
+                # Metric cards styled for Light Theme
                 st.markdown(f"""
                 <div class='metric-card'>
-                    <div style='font-size:14px;color:#9CA3AF;'>R-squared (Fit accuracy)</div>
-                    <div style='font-size:24px;font-weight:bold;color:#00FF66;'>{r2:.5f}</div>
+                    <div style='font-size:12px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:0.5px;'>R² (Fit Accuracy)</div>
+                    <div style='font-size:26px;font-weight:700;color:#059669;margin-top:2px;'>{r2:.5f}</div>
                 </div>
                 <div class='metric-card'>
-                    <div style='font-size:14px;color:#9CA3AF;'>RMSE (Residual error)</div>
-                    <div style='font-size:24px;font-weight:bold;color:#FF2E93;'>{rmse:.5f}</div>
+                    <div style='font-size:12px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:0.5px;'>RMSE (Residual Error)</div>
+                    <div style='font-size:26px;font-weight:700;color:#E11D48;margin-top:2px;'>{rmse:.5f}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 

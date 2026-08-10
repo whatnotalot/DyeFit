@@ -192,28 +192,37 @@ def generate_matplotlib_fig(x_data, y_data, y_fitted, individual_peaks, model_ty
 # =============================================================================
 # 4. INTERACTIVE PLOTLY FIGURE GENERATION (DASHBOARD PREVIEW)
 # =============================================================================
-def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, theme="dark"):
+def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, theme="light"):
     """
-    Generates a Plotly figure with dynamic styling (Web Dark or Publication Light).
+    Generates a Plotly figure with dynamic styling (Clean Light, Publication Light, or Web Dark).
     
     Features:
-      - Web Dark: Transparent background, glowing neon traces, optimized for monitors.
-      - Publication Light: White background, black axis lines, inward ticks, 
-        and a locked 4:3 aspect ratio (580x435 px) to match journal layout.
+      - Clean Light (default): Fresh white background, high-contrast spectrum lines, colorblind-safe fills.
+      - Publication Light: White background, black axis lines, inward ticks, 4:3 ratio.
+      - Web Dark: Transparent background, glowing neon traces.
     """
     fig = go.Figure()
     
     # Define styling colors based on the chosen theme
-    if theme == "publication_light":
+    if theme in ["light", "clean_light"]:
+        data_color = "#1E293B"       # Dark Slate for raw data
+        fit_color = "#E11D48"        # Rose Crimson for fit
+        bg_color = "#FFFFFF"         # White background
+        paper_bg = "#FFFFFF"
+        grid_color = "#E2E8F0"       # Light gray grid
+        text_color = "#0F172A"       # Deep slate text
+        border_color = "#94A3B8"
+        peak_colors = ['#2563EB', '#059669', '#D97706', '#7C3AED', '#0891B2']
+    elif theme == "publication_light":
         data_color = "#000000"       # Black for raw data
-        fit_color = "#FF2E93"        # Pink/red for fit
+        fit_color = "#E11D48"        # Rose Crimson for fit
         bg_color = "#FFFFFF"         # White background
         paper_bg = "#FFFFFF"
         grid_color = "#E5E7EB"       # Light gray grid
         text_color = "#111827"       # Dark text
         border_color = "#111827"
         peak_colors = ['#0072B2', '#009E73', '#D55E00', '#CC79A7', '#E69F00']
-    else: # Default Web Dark
+    else: # Web Dark
         data_color = "#00D2FF"       # Cyan for data
         fit_color = "#FF2E93"        # Pink for fit
         bg_color = "rgba(0,0,0,0)"   # Transparent plot
