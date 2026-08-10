@@ -211,18 +211,26 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
         paper_bg = "#FFFFFF"         # Pure white paper background
         grid_color = "#E2E8F0"       # Crisp light gray grid
         text_color = "#000000"       # Pure black for all text, titles, tick labels
+        title_color = "#000000"
         border_color = "#000000"     # Pure black for box border and ticks
         axis_line_width = 1.5
+        legend_bg = "rgba(255,255,255,0.95)"
+        legend_border = border_color
+        legend_bw = 0.8
         peak_colors = ['#0072B2', '#009E73', '#D55E00', '#CC79A7', '#E69F00']
     else: # Default Web Dark
-        data_color = "#00D2FF"       # Cyan for data
-        fit_color = "#FF2E93"        # Pink for fit
+        data_color = "#00D2FF"       # Vibrant Cyan for data
+        fit_color = "#FF2E93"        # Vibrant Pink for fit
         bg_color = "rgba(0,0,0,0)"   # Transparent plot
         paper_bg = "rgba(0,0,0,0)"   # Transparent paper
-        grid_color = "rgba(255,255,255,0.15)"
-        text_color = "#F3F4F6"       # Light gray text
-        border_color = "rgba(255,255,255,0.3)"
-        axis_line_width = 1.0
+        grid_color = "rgba(255,255,255,0.18)"
+        text_color = "#FFFFFF"       # Solid bright white for text & labels
+        title_color = "#00D2FF"      # Vibrant cyan title accent
+        border_color = "rgba(255,255,255,0.45)"  # Crisp white frame border
+        axis_line_width = 1.2
+        legend_bg = "rgba(30, 41, 59, 0.85)"     # Translucent dark frame
+        legend_border = "rgba(255,255,255,0.3)"
+        legend_bw = 0.8
         peak_colors = ['#FFC700', '#00FF66', '#A100FF', '#FF7A00', '#00E1FF']
 
     # 1. Plot Corrected Experimental Data
@@ -267,14 +275,14 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
     layout_opts = dict(
         title=dict(
             text=f'Deconvoluted {model_type} Fit',
-            font=dict(family="Arial, Helvetica, sans-serif", size=14, color=text_color),
+            font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=14, color=title_color),
             x=0,
             y=0.96
         ),
         paper_bgcolor=paper_bg,
         plot_bgcolor=bg_color,
         font=dict(
-            family="Arial, Helvetica, sans-serif",
+            family="Google Sans Flex, Arial, Helvetica, sans-serif",
             size=11,
             color=text_color
         ),
@@ -284,10 +292,10 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
             y=1.08,
             xanchor="right",
             x=1,
-            font=dict(family="Arial, Helvetica, sans-serif", size=10.5, color=text_color),
-            bgcolor="rgba(255,255,255,0.95)" if theme == "publication_light" else "rgba(0,0,0,0)",
-            bordercolor=border_color if theme == "publication_light" else "rgba(0,0,0,0)",
-            borderwidth=0.8 if theme == "publication_light" else 0
+            font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=10.5, color=text_color),
+            bgcolor=legend_bg,
+            bordercolor=legend_border,
+            borderwidth=legend_bw
         ),
         margin=dict(l=55, r=40, t=95, b=50),
     )
@@ -303,8 +311,8 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
     
     # Configure axes borders and inward ticks
     fig.update_xaxes(
-        title=dict(text='Wavelength (nm)', font=dict(family="Arial, Helvetica, sans-serif", size=12, color=text_color)),
-        tickfont=dict(family="Arial, Helvetica, sans-serif", size=10, color=text_color),
+        title=dict(text='Wavelength (nm)', font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=12, color=text_color)),
+        tickfont=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=10, color=text_color),
         showgrid=True, 
         gridwidth=0.8, 
         gridcolor=grid_color,
@@ -317,8 +325,8 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
         tickwidth=axis_line_width
     )
     fig.update_yaxes(
-        title=dict(text='Absorbance', font=dict(family="Arial, Helvetica, sans-serif", size=12, color=text_color)),
-        tickfont=dict(family="Arial, Helvetica, sans-serif", size=10, color=text_color),
+        title=dict(text='Absorbance', font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=12, color=text_color)),
+        tickfont=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=10, color=text_color),
         showgrid=True, 
         gridwidth=0.8, 
         gridcolor=grid_color,

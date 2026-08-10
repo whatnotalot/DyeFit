@@ -57,7 +57,7 @@ if "show_warning" not in st.session_state:
 # Set page configuration for professional design and iframe responsiveness
 st.set_page_config(
     page_title="DyeFit - Dye Deconvolution & Fitting",
-    page_icon="🧪",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -65,6 +65,8 @@ st.set_page_config(
 # Inject custom CSS styles for cards and typography (premium dark-theme aesthetics)
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;700&family=Outfit:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+    
     .metric-card {
         background-color: #1F2937;
         border-radius: 8px;
@@ -74,7 +76,7 @@ st.markdown("""
     }
     .custom-title {
         color: #00D2FF;
-        font-family: 'Outfit', 'Inter', sans-serif;
+        font-family: 'Google Sans Flex', 'Google Sans', sans-serif;
         font-weight: 700;
     }
 </style>
@@ -92,11 +94,11 @@ except Exception:
     pass
 
 if not is_embedded:
-    st.markdown("<h1 class='custom-title'>🧪 DyeFit Spectroscopic Fitting Agent</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='custom-title'>DyeFit Spectroscopic Fitting Agent</h1>", unsafe_allow_html=True)
     st.markdown("Automated baseline correction, multi-model curve fitting, and peak deconvolution for scientific dyes.")
 else:
     # Minimalist header for clean iframe rendering
-    st.markdown("<h3 class='custom-title'>🧪 DyeFit Analyzer</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 class='custom-title'>DyeFit Analyzer</h3>", unsafe_allow_html=True)
 
 # Render dismissible session notice
 if st.session_state.get("show_warning", True) and not is_embedded:
@@ -409,19 +411,27 @@ if uploaded_df is not None:
             paper_bg = "#FFFFFF"     # Pure white paper background
             grid_color = "#E2E8F0"   # Crisp light gray grid
             text_color = "#000000"   # Pure black for all text, titles, tick labels
+            title_color = "#000000"
             border_color = "#000000" # Pure black for box border and ticks
             axis_line_width = 1.5
+            legend_bg = "rgba(255,255,255,0.95)"
+            legend_border = border_color
+            legend_bw = 0.8
             layout_w_h = dict(width=580, height=435) 
         else:
-            raw_color = "#CCCCCC"
-            base_color = "#FFC700"
-            corr_color = "#00D2FF"
+            raw_color = "#E5E7EB"    # Bright light gray for raw data
+            base_color = "#FFC700"   # Vibrant yellow for baseline
+            corr_color = "#00D2FF"   # Vibrant cyan for corrected absorbance
             bg_color = "rgba(0,0,0,0)"
             paper_bg = "rgba(0,0,0,0)"
-            grid_color = "rgba(255,255,255,0.15)"
-            text_color = "#F3F4F6"
-            border_color = "rgba(255,255,255,0.3)"
-            axis_line_width = 1.0
+            grid_color = "rgba(255,255,255,0.18)"
+            text_color = "#FFFFFF"   # Solid bright white for text & labels
+            title_color = "#00D2FF"  # Cyan title accent
+            border_color = "rgba(255,255,255,0.45)" # Crisp white border frame
+            axis_line_width = 1.2
+            legend_bg = "rgba(30, 41, 59, 0.85)"     # Translucent dark frame
+            legend_border = "rgba(255,255,255,0.3)"
+            legend_bw = 0.8
             layout_w_h = dict()
             
         fig_base = go.Figure()
@@ -432,13 +442,13 @@ if uploaded_df is not None:
         layout_opts = dict(
             title=dict(
                 text="Baseline Fitting & Correction",
-                font=dict(family="Arial, Helvetica, sans-serif", size=14, color=text_color),
+                font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=14, color=title_color),
                 x=0,
                 y=0.96
             ),
             paper_bgcolor=paper_bg,
             plot_bgcolor=bg_color,
-            font=dict(family="Arial, Helvetica, sans-serif", size=11, color=text_color),
+            font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=11, color=text_color),
             margin=dict(l=55, r=40, t=95, b=50),
             legend=dict(
                 orientation="h",
@@ -446,18 +456,18 @@ if uploaded_df is not None:
                 y=1.08,
                 xanchor="right",
                 x=1,
-                font=dict(family="Arial, Helvetica, sans-serif", size=10.5, color=text_color),
-                bgcolor="rgba(255,255,255,0.95)" if plotly_theme == "publication_light" else "rgba(0,0,0,0)",
-                bordercolor=border_color if plotly_theme == "publication_light" else "rgba(0,0,0,0)",
-                borderwidth=0.8 if plotly_theme == "publication_light" else 0
+                font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=10.5, color=text_color),
+                bgcolor=legend_bg,
+                bordercolor=legend_border,
+                borderwidth=legend_bw
             )
         )
         layout_opts.update(layout_w_h)
         fig_base.update_layout(**layout_opts)
         
         fig_base.update_xaxes(
-            title=dict(text="Wavelength (nm)", font=dict(family="Arial, Helvetica, sans-serif", size=12, color=text_color)),
-            tickfont=dict(family="Arial, Helvetica, sans-serif", size=10, color=text_color),
+            title=dict(text="Wavelength (nm)", font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=12, color=text_color)),
+            tickfont=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=10, color=text_color),
             showgrid=True,
             gridwidth=0.8,
             gridcolor=grid_color,
@@ -470,8 +480,8 @@ if uploaded_df is not None:
             tickwidth=axis_line_width
         )
         fig_base.update_yaxes(
-            title=dict(text="Absorbance", font=dict(family="Arial, Helvetica, sans-serif", size=12, color=text_color)),
-            tickfont=dict(family="Arial, Helvetica, sans-serif", size=10, color=text_color),
+            title=dict(text="Absorbance", font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=12, color=text_color)),
+            tickfont=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=10, color=text_color),
             showgrid=True,
             gridwidth=0.8,
             gridcolor=grid_color,
