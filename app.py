@@ -482,14 +482,15 @@ if uploaded_df is not None:
         
         # Setup colors based on dynamic Plotly theme
         if plotly_theme == "publication_light":
-            raw_color = "#9CA3AF"  
-            base_color = "#D55E00" 
-            corr_color = "#000000" 
-            bg_color = "#FFFFFF"
-            paper_bg = "#FFFFFF"
-            grid_color = "#E5E7EB"
-            text_color = "#111827"
-            border_color = "#111827"
+            raw_color = "#4B5563"    # High-contrast slate gray for raw data
+            base_color = "#D55E00"   # High-contrast vermillion for fitted baseline
+            corr_color = "#000000"   # Solid black for corrected absorbance
+            bg_color = "#FFFFFF"     # Pure white plot background
+            paper_bg = "#FFFFFF"     # Pure white paper background
+            grid_color = "#E2E8F0"   # Crisp light gray grid
+            text_color = "#000000"   # Pure black for all text, titles, tick labels
+            border_color = "#000000" # Pure black for box border and ticks
+            axis_line_width = 1.5
             layout_w_h = dict(width=580, height=435) 
         else:
             raw_color = "#CCCCCC"
@@ -497,31 +498,69 @@ if uploaded_df is not None:
             corr_color = "#00D2FF"
             bg_color = "rgba(0,0,0,0)"
             paper_bg = "rgba(0,0,0,0)"
-            grid_color = "rgba(255,255,255,0.1)"
+            grid_color = "rgba(255,255,255,0.15)"
             text_color = "#F3F4F6"
-            border_color = "rgba(255,255,255,0.2)"
+            border_color = "rgba(255,255,255,0.3)"
+            axis_line_width = 1.0
             layout_w_h = dict()
             
         fig_base = go.Figure()
         fig_base.add_trace(go.Scatter(x=x_cropped, y=y_cropped, name="Raw Absorbance", line=dict(color=raw_color, width=1.5)))
-        fig_base.add_trace(go.Scatter(x=x_cropped, y=baseline, name="Fitted Baseline", line=dict(color=base_color, width=1.5, dash='dash')))
+        fig_base.add_trace(go.Scatter(x=x_cropped, y=baseline, name="Fitted Baseline", line=dict(color=base_color, width=1.8, dash='dash')))
         fig_base.add_trace(go.Scatter(x=x_cropped, y=abs_corrected, name="Corrected Absorbance", line=dict(color=corr_color, width=2)))
         
         layout_opts = dict(
-            title="Baseline Fitting & Correction",
-            xaxis_title="Wavelength (nm)",
-            yaxis_title="Absorbance",
+            title=dict(
+                text="Baseline Fitting & Correction",
+                font=dict(family="Arial, Helvetica, sans-serif", size=14, color=text_color)
+            ),
             paper_bgcolor=paper_bg,
             plot_bgcolor=bg_color,
             font=dict(family="Arial, Helvetica, sans-serif", size=11, color=text_color),
-            margin=dict(l=50, r=40, t=80, b=50),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            margin=dict(l=55, r=40, t=80, b=50),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                font=dict(family="Arial, Helvetica, sans-serif", size=11, color=text_color),
+                bgcolor="rgba(255,255,255,0.9)" if plotly_theme == "publication_light" else "rgba(0,0,0,0)",
+                bordercolor=border_color if plotly_theme == "publication_light" else "rgba(0,0,0,0)",
+                borderwidth=0.5 if plotly_theme == "publication_light" else 0
+            )
         )
         layout_opts.update(layout_w_h)
         fig_base.update_layout(**layout_opts)
         
-        fig_base.update_xaxes(showgrid=True, gridwidth=0.8, gridcolor=grid_color, linecolor=border_color, mirror=True, ticks="inside")
-        fig_base.update_yaxes(showgrid=True, gridwidth=0.8, gridcolor=grid_color, linecolor=border_color, mirror=True, ticks="inside")
+        fig_base.update_xaxes(
+            title=dict(text="Wavelength (nm)", font=dict(family="Arial, Helvetica, sans-serif", size=12, color=text_color)),
+            tickfont=dict(family="Arial, Helvetica, sans-serif", size=10, color=text_color),
+            showgrid=True,
+            gridwidth=0.8,
+            gridcolor=grid_color,
+            showline=True,
+            linewidth=axis_line_width,
+            linecolor=border_color,
+            mirror=True,
+            ticks="inside",
+            tickcolor=border_color,
+            tickwidth=axis_line_width
+        )
+        fig_base.update_yaxes(
+            title=dict(text="Absorbance", font=dict(family="Arial, Helvetica, sans-serif", size=12, color=text_color)),
+            tickfont=dict(family="Arial, Helvetica, sans-serif", size=10, color=text_color),
+            showgrid=True,
+            gridwidth=0.8,
+            gridcolor=grid_color,
+            showline=True,
+            linewidth=axis_line_width,
+            linecolor=border_color,
+            mirror=True,
+            ticks="inside",
+            tickcolor=border_color,
+            tickwidth=axis_line_width
+        )
         
         st.plotly_chart(fig_base, use_container_width=plotly_theme != "publication_light")
         
