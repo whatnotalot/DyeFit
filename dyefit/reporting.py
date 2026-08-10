@@ -267,7 +267,9 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
     layout_opts = dict(
         title=dict(
             text=f'Deconvoluted {model_type} Fit',
-            font=dict(family="Arial, Helvetica, sans-serif", size=14, color=text_color)
+            font=dict(family="Arial, Helvetica, sans-serif", size=14, color=text_color),
+            x=0,
+            y=0.96
         ),
         paper_bgcolor=paper_bg,
         plot_bgcolor=bg_color,
@@ -279,15 +281,15 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.02,
+            y=1.08,
             xanchor="right",
             x=1,
-            font=dict(family="Arial, Helvetica, sans-serif", size=11, color=text_color),
-            bgcolor="rgba(255,255,255,0.9)" if theme == "publication_light" else "rgba(0,0,0,0)",
+            font=dict(family="Arial, Helvetica, sans-serif", size=10.5, color=text_color),
+            bgcolor="rgba(255,255,255,0.95)" if theme == "publication_light" else "rgba(0,0,0,0)",
             bordercolor=border_color if theme == "publication_light" else "rgba(0,0,0,0)",
-            borderwidth=0.5 if theme == "publication_light" else 0
+            borderwidth=0.8 if theme == "publication_light" else 0
         ),
-        margin=dict(l=55, r=40, t=80, b=50),
+        margin=dict(l=55, r=40, t=95, b=50),
     )
     
     # Set a fixed, clean aspect ratio for publication format (e.g. 4:3)
