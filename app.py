@@ -43,6 +43,13 @@ from dyefit import (
     constant_offset_region
 )
 
+def safe_rerun():
+    """Reruns the Streamlit app safely across all Streamlit versions."""
+    if hasattr(st, "rerun"):
+        st.rerun()
+    elif hasattr(st, "experimental_rerun"):
+        st.experimental_rerun()
+
 # =============================================================================
 # SESSION STATE INITIALIZATION
 # =============================================================================
@@ -305,7 +312,7 @@ if st.session_state.get("show_warning", True) and not is_embedded:
         st.write("") # Spacer
         if st.button("Got it! ✅"):
             st.session_state.show_warning = False
-            st.experimental_rerun()
+            safe_rerun()
 
 
 # =============================================================================
@@ -494,7 +501,7 @@ if uploaded_df is not None:
                 # Store in session state dictionary (completely in-memory, thread-safe, temporary)
                 st.session_state.session_dyes[custom_name] = config_new
                 st.sidebar.success(f"Preset '{custom_name}' added to your session!")
-                st.experimental_rerun()
+                safe_rerun()
             except Exception as e:
                 st.sidebar.error(f"Failed to save preset: {e}")
                 
@@ -909,22 +916,22 @@ with col_v1:
     btn_l_label = "☼ Light Mode ✅" if st.session_state.get("app_theme") == "light" else "☼ Light Mode"
     if st.button(btn_l_label, key="b_theme_light", use_container_width=True):
         st.session_state.app_theme = "light"
-        st.experimental_rerun()
+        safe_rerun()
 
 with col_v2:
     btn_d_label = "☾ Dark Mode ✅" if st.session_state.get("app_theme") == "dark" else "☾ Dark Mode"
     if st.button(btn_d_label, key="b_theme_dark", use_container_width=True):
         st.session_state.app_theme = "dark"
-        st.experimental_rerun()
+        safe_rerun()
 
 with col_v3:
     btn_s_label = "◐ System Theme ✅" if st.session_state.get("app_theme") == "system" else "◐ System Theme"
     if st.button(btn_s_label, key="b_theme_system", use_container_width=True):
         st.session_state.app_theme = "system"
-        st.experimental_rerun()
+        safe_rerun()
 
 with col_vw:
     layout_label = "↔️ Wide View (Active)" if st.session_state.get("layout_wide", True) else "↕️ Centered / Standard View"
     if st.button(layout_label, key="b_layout_toggle", use_container_width=True):
         st.session_state.layout_wide = not st.session_state.get("layout_wide", True)
-        st.experimental_rerun()
+        safe_rerun()
