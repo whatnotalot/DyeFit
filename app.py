@@ -52,19 +52,36 @@ if "session_dyes" not in st.session_state:
     st.session_state.session_dyes = copy.deepcopy(DYE_REGISTRY)
 if "show_warning" not in st.session_state:
     st.session_state.show_warning = True
+if "app_theme" not in st.session_state:
+    st.session_state.app_theme = "light"
+if "layout_wide" not in st.session_state:
+    st.session_state.layout_wide = True
+
+import os
+import base64
+
+# Load project logo image asset as Base64
+logo_path = os.path.join(os.path.dirname(__file__), "logo.jpg")
+logo_b64 = ""
+if os.path.exists(logo_path):
+    try:
+        with open(logo_path, "rb") as img_file:
+            logo_b64 = base64.b64encode(img_file.read()).decode("utf-8")
+    except Exception:
+        logo_b64 = ""
 
 # =============================================================================
 # 1. PAGE SETUP & CSS INJECTION
 # =============================================================================
 # Set page configuration for professional design and iframe responsiveness
 st.set_page_config(
-    page_title="DyeFit v0.3 - Dye Deconvolution & Fitting",
+    page_title="DyeFit v0.4 - Dye Deconvolution & Fitting",
     page_icon="🧪",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Inject custom CSS styles for Dyefit v0.3 (Modern Light Theme aesthetics)
+# Inject custom CSS styles for Dyefit v0.4 (Modern Light & Dark Theme aesthetics)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
@@ -151,8 +168,93 @@ st.markdown("""
         color: #2563EB !important;
         background-color: #EFF6FF !important;
     }
+
+    /* Top header & 3-dots Main Menu bar formatting */
+    [data-testid="stHeader"] {
+        background-color: transparent !important;
+        z-index: 99999 !important;
+    }
+    [data-testid="stToolbar"] {
+        right: 1rem !important;
+        visibility: visible !important;
+        display: flex !important;
+    }
+    #MainMenu, [data-testid="stMainMenu"], button[aria-label="Main menu"] {
+        visibility: visible !important;
+        display: inline-flex !important;
+    }
+
+    /* Hide ONLY Fork button, GitHub link, and Deploy button */
+    .stAppDeployButton,
+    [data-testid="stAppDeployButton"],
+    [data-testid="stHeader"] a[href*="github.com"],
+    [data-testid="stHeader"] a[href*="github"],
+    [data-testid="stHeader"] a[href*="fork"],
+    [data-testid="stHeader"] button[title*="GitHub"],
+    [data-testid="stHeader"] button[title*="git"],
+    [data-testid="stHeader"] button[title*="Fork"],
+    [data-testid="stHeader"] button[title*="fork"],
+    [data-testid="stToolbar"] a[href*="github"],
+    [data-testid="stToolbar"] a[href*="fork"],
+    [data-testid="stToolbar"] button[title*="Fork"],
+    [data-testid="stToolbar"] button[title*="fork"] {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+# Dynamic layout width CSS injection
+if not st.session_state.get("layout_wide", True):
+    st.markdown("""
+    <style>
+        .block-container {
+            max-width: 1050px !important;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+            margin: 0 auto !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <style>
+        .block-container {
+            max-width: 95% !important;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Dynamic theme CSS injection
+curr_theme = st.session_state.get("app_theme", "light")
+if curr_theme == "dark":
+    st.markdown("""
+    <style>
+        .stApp { background-color: #0F172A !important; color: #F8FAFC !important; }
+        .metric-card { background: #1E293B !important; border-color: #334155 !important; color: #F8FAFC !important; }
+        .metric-card div { color: #F8FAFC !important; }
+        .custom-title { color: #F8FAFC !important; }
+        .custom-subtitle { color: #94A3B8 !important; }
+    </style>
+    """, unsafe_allow_html=True)
+elif curr_theme == "system":
+    st.markdown("""
+    <style>
+        @media (prefers-color-scheme: dark) {
+            .stApp { background-color: #0F172A !important; color: #F8FAFC !important; }
+            .metric-card { background: #1E293B !important; border-color: #334155 !important; color: #F8FAFC !important; }
+            .metric-card div { color: #F8FAFC !important; }
+            .custom-title { color: #F8FAFC !important; }
+            .custom-subtitle { color: #94A3B8 !important; }
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Detect if the app is embedded inside an iframe (e.g. in a WordPress page)
 is_embedded = False
@@ -165,8 +267,19 @@ except Exception:
     pass
 
 if not is_embedded:
-    st.markdown("<h1 class='custom-title'>🧪 Dyefit <span class='version-badge'>v0.3</span></h1>", unsafe_allow_html=True)
-    st.markdown("<p class='custom-subtitle'>Spectroscopic Baseline Correction & Peak Deconvolution Workbench</p>", unsafe_allow_html=True)
+    if logo_b64:
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+            <img src="data:image/jpeg;base64,{logo_b64}" style="width: 76px; height: 76px; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 16px rgba(37,99,235,0.15); border: 2px solid #E2E8F0;">
+            <div>
+                <h1 class="custom-title" style="margin: 0; padding: 0;">DyeFit <span class="version-badge">v0.4</span></h1>
+                <p class="custom-subtitle" style="margin: 2px 0 0 0;">Spectroscopic Baseline Correction & Peak Deconvolution Workbench</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("<h1 class='custom-title'>🧪 DyeFit <span class='version-badge'>v0.4</span></h1>", unsafe_allow_html=True)
+        st.markdown("<p class='custom-subtitle'>Spectroscopic Baseline Correction & Peak Deconvolution Workbench</p>", unsafe_allow_html=True)
     
     with st.expander("📖 How to Use & Scientific Guide", expanded=False):
         st.markdown("""
@@ -181,7 +294,7 @@ if not is_embedded:
         """)
 else:
     # Minimalist header for clean iframe rendering
-    st.markdown("<h3 class='custom-title'>🧪 Dyefit Analyzer <span class='version-badge'>v0.3</span></h3>", unsafe_allow_html=True)
+    st.markdown("<h3 class='custom-title'>🧪 Dyefit Analyzer <span class='version-badge'>v0.4</span></h3>", unsafe_allow_html=True)
 
 # Render dismissible session notice
 if st.session_state.get("show_warning", True) and not is_embedded:
@@ -286,6 +399,12 @@ def generate_demo_data(dye_name):
 # =============================================================================
 # 4. SIDEBAR - FILE INGESTION
 # =============================================================================
+if logo_b64:
+    st.sidebar.markdown(f"""
+    <div style="text-align: center; margin-bottom: 16px; margin-top: -10px;">
+        <img src="data:image/jpeg;base64,{logo_b64}" style="width: 140px; height: 140px; border-radius: 18px; object-fit: cover; box-shadow: 0 8px 24px rgba(0,0,0,0.12); border: 3px solid #FFFFFF;">
+    </div>
+    """, unsafe_allow_html=True)
 st.sidebar.header("📁 1. Load Spectrum")
 data_source = st.sidebar.radio("Data Source", ["Upload Excel/CSV", "Use Demo Data"])
 
@@ -493,12 +612,21 @@ if uploaded_df is not None:
     model_type = st.sidebar.selectbox("Curve Fitting Model", ["Gaussian", "Lorentzian", "Voigt", "Pseudo-Voigt", "Asymmetric Gaussian"])
     
     st.sidebar.markdown("---")
-    st.sidebar.header("🎨 4. Chart Style Settings")
-    theme_choice = st.sidebar.radio("Plotly Chart Style", ["Clean Light (Default)", "Publication Light", "Web Dark"])
+    st.sidebar.header("🎨 4. App View & Theme Settings")
+    theme_choice = st.sidebar.radio("Site & Chart Theme", ["Clean Light (Default)", "Publication Light", "Web Dark Mode"])
     if theme_choice == "Publication Light":
         plotly_theme = "publication_light"
-    elif theme_choice == "Web Dark":
+    elif theme_choice == "Web Dark Mode":
         plotly_theme = "dark"
+        st.markdown("""
+        <style>
+            .stApp { background-color: #0F172A !important; color: #F8FAFC !important; }
+            .metric-card { background: #1E293B !important; border-color: #334155 !important; color: #F8FAFC !important; }
+            .metric-card div { color: #F8FAFC !important; }
+            .custom-title { color: #F8FAFC !important; }
+            .custom-subtitle { color: #94A3B8 !important; }
+        </style>
+        """, unsafe_allow_html=True)
     else:
         plotly_theme = "light"
     
@@ -687,7 +815,7 @@ if uploaded_df is not None:
         with col_c1:
             export_font = st.selectbox("Font Family", ["Arial", "Helvetica", "Times New Roman", "Computer Modern"])
             export_dim = st.radio("Layout Dimensions", ["Single-Column 3.3\"", "Double-Column 6.8\""])
-            export_grid = st.toggle("Show Gridlines", value=False)
+            export_grid = st.checkbox("Show Gridlines", value=False)
         with col_c2:
             export_linewidth = st.slider("Line Thickness (pt)", 1.0, 3.0, 1.2, step=0.1)
             export_fontsize = st.slider("Font Size (pt)", 8, 14, 8)
@@ -768,3 +896,35 @@ if uploaded_df is not None:
 
 else:
     st.info("Please upload an Excel/CSV file or select 'Use Demo Data' in the sidebar to start spectroscopic curve deconvolution.")
+
+# =============================================================================
+# BOTTOM QUICK VIEW TUNING TOOLBAR
+# =============================================================================
+st.markdown("<br><hr style='border: 0; height: 1px; background: #E2E8F0; margin-top: 30px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+st.markdown("#### ⚙️ Quick View Tuning & Appearance Shortcuts")
+
+col_v1, col_v2, col_v3, col_vw = st.columns([1, 1, 1, 1.4])
+
+with col_v1:
+    btn_l_label = "☼ Light Mode ✅" if st.session_state.get("app_theme") == "light" else "☼ Light Mode"
+    if st.button(btn_l_label, key="b_theme_light", use_container_width=True):
+        st.session_state.app_theme = "light"
+        st.experimental_rerun()
+
+with col_v2:
+    btn_d_label = "☾ Dark Mode ✅" if st.session_state.get("app_theme") == "dark" else "☾ Dark Mode"
+    if st.button(btn_d_label, key="b_theme_dark", use_container_width=True):
+        st.session_state.app_theme = "dark"
+        st.experimental_rerun()
+
+with col_v3:
+    btn_s_label = "◐ System Theme ✅" if st.session_state.get("app_theme") == "system" else "◐ System Theme"
+    if st.button(btn_s_label, key="b_theme_system", use_container_width=True):
+        st.session_state.app_theme = "system"
+        st.experimental_rerun()
+
+with col_vw:
+    layout_label = "↔️ Wide View (Active)" if st.session_state.get("layout_wide", True) else "↕️ Centered / Standard View"
+    if st.button(layout_label, key="b_layout_toggle", use_container_width=True):
+        st.session_state.layout_wide = not st.session_state.get("layout_wide", True)
+        st.experimental_rerun()

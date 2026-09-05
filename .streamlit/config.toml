@@ -1,0 +1,6 @@
+[client]
+toolbarMode = "auto"
+showErrorDetails = false
+
+[ui]
+hideTopBar = false
