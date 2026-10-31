@@ -11,6 +11,7 @@ Modules exposed:
   - `models`: Peak math profiles (Gaussian, Lorentzian, Voigt, Pseudo-Voigt, etc.).
   - `fitting`: Automated peak detection and non-linear regression solvers.
   - `reporting`: Statistical evaluators, numerical integration, and plot outputs.
+  - `kinetics`: Time-series reaction modeling, batch deconvolution, and rate constants.
 """
 
 from .dyes import get_dye_config, DYE_REGISTRY, DyeConfig, reload_dye_registry, save_dye_to_db
@@ -34,6 +35,16 @@ from .reporting import (
     generate_matplotlib_fig,
     generate_plotly_fig
 )
+from .kinetics import (
+    fit_pseudo_first_order,
+    fit_pseudo_second_order,
+    fit_zero_order,
+    batch_deconvolve_series,
+    generate_demo_kinetic_data,
+    generate_kinetic_plotly_fig,
+    generate_multi_spectrum_plotly_fig,
+    generate_kinetic_matplotlib_fig
+)
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "DyeFit Developers"
