@@ -204,7 +204,21 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
     fig = go.Figure()
     
     # Define styling colors based on the chosen theme
-    if theme in ["light", "clean_light"]:
+    if theme == "publication_light":
+        data_color = "#000000"       # Solid black for raw data
+        fit_color = "#D9534F"        # High-contrast red for fit curve
+        bg_color = "#FFFFFF"         # Pure white plot background
+        paper_bg = "#FFFFFF"         # Pure white paper background
+        grid_color = "#E2E8F0"       # Crisp light gray grid
+        text_color = "#000000"       # Pure black for all text, titles, tick labels
+        title_color = "#000000"
+        border_color = "#000000"     # Pure black for box border and ticks
+        axis_line_width = 1.5
+        legend_bg = "rgba(255,255,255,0.95)"
+        legend_border = border_color
+        legend_bw = 0.8
+        peak_colors = ['#0072B2', '#009E73', '#D55E00', '#CC79A7', '#E69F00']
+    elif theme in ["light", "clean_light"]:
         data_color = "#1E293B"       # Dark Slate for raw data
         fit_color = "#E11D48"        # Rose Crimson for fit
         bg_color = "#FFFFFF"         # White background
@@ -212,24 +226,24 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
         grid_color = "#E2E8F0"       # Light gray grid
         text_color = "#0F172A"       # Deep slate text
         border_color = "#94A3B8"
+        axis_line_width = 1.2
+        legend_bg = "rgba(255,255,255,0.9)"
+        legend_border = border_color
+        legend_bw = 0.8
         peak_colors = ['#2563EB', '#059669', '#D97706', '#7C3AED', '#0891B2']
-    elif theme == "publication_light":
-        data_color = "#000000"       # Black for raw data
-        fit_color = "#E11D48"        # Rose Crimson for fit
-        bg_color = "#FFFFFF"         # White background
-        paper_bg = "#FFFFFF"
-        grid_color = "#E5E7EB"       # Light gray grid
-        text_color = "#111827"       # Dark text
-        border_color = "#111827"
-        peak_colors = ['#0072B2', '#009E73', '#D55E00', '#CC79A7', '#E69F00']
-    else: # Web Dark
-        data_color = "#00D2FF"       # Cyan for data
-        fit_color = "#FF2E93"        # Pink for fit
+    else: # Default Web Dark
+        data_color = "#00D2FF"       # Vibrant Cyan for data
+        fit_color = "#FF2E93"        # Vibrant Pink for fit
         bg_color = "rgba(0,0,0,0)"   # Transparent plot
         paper_bg = "rgba(0,0,0,0)"   # Transparent paper
-        grid_color = "rgba(255,255,255,0.1)"
-        text_color = "#F3F4F6"       # Light gray text
-        border_color = "rgba(255,255,255,0.2)"
+        grid_color = "rgba(255,255,255,0.18)"
+        text_color = "#FFFFFF"       # Solid bright white for text & labels
+        title_color = "#00D2FF"      # Vibrant cyan title accent
+        border_color = "rgba(255,255,255,0.45)"  # Crisp white frame border
+        axis_line_width = 1.2
+        legend_bg = "rgba(30, 41, 59, 0.85)"     # Translucent dark frame
+        legend_border = "rgba(255,255,255,0.3)"
+        legend_bw = 0.8
         peak_colors = ['#FFC700', '#00FF66', '#A100FF', '#FF7A00', '#00E1FF']
 
     # 1. Plot Corrected Experimental Data
@@ -257,7 +271,7 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
         
         # Convert hex color to semi-transparent RGBA color
         if color.startswith("#"):
-            rgba_color = f'rgba{tuple(list(int(color[j:j+2], 16) for j in (1, 3, 5)) + [0.08])}'
+            rgba_color = f'rgba{tuple(list(int(color[j:j+2], 16) for j in (1, 3, 5)) + [0.12])}'
         else:
             rgba_color = 'rgba(0,0,0,0.05)'
             
@@ -272,24 +286,31 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
         ))
         
     layout_opts = dict(
-        title=f'Deconvoluted {model_type} Fit',
-        xaxis_title='Wavelength (nm)',
-        yaxis_title='Absorbance',
+        title=dict(
+            text=f'Deconvoluted {model_type} Fit',
+            font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=14, color=title_color),
+            x=0,
+            y=0.96
+        ),
         paper_bgcolor=paper_bg,
         plot_bgcolor=bg_color,
         font=dict(
-            family="Arial, Helvetica, sans-serif",
+            family="Google Sans Flex, Arial, Helvetica, sans-serif",
             size=11,
             color=text_color
         ),
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.02,
+            y=1.08,
             xanchor="right",
-            x=1
+            x=1,
+            font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=10.5, color=text_color),
+            bgcolor=legend_bg,
+            bordercolor=legend_border,
+            borderwidth=legend_bw
         ),
-        margin=dict(l=50, r=40, t=80, b=50),
+        margin=dict(l=55, r=40, t=95, b=50),
     )
     
     # Set a fixed, clean aspect ratio for publication format (e.g. 4:3)
@@ -303,20 +324,32 @@ def generate_plotly_fig(x_data, y_data, y_fitted, individual_peaks, model_type, 
     
     # Configure axes borders and inward ticks
     fig.update_xaxes(
+        title=dict(text='Wavelength (nm)', font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=12, color=text_color)),
+        tickfont=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=10, color=text_color),
         showgrid=True, 
         gridwidth=0.8, 
         gridcolor=grid_color,
+        showline=True,
+        linewidth=axis_line_width,
         linecolor=border_color,
         mirror=True,
-        ticks="inside"
+        ticks="inside",
+        tickcolor=border_color,
+        tickwidth=axis_line_width
     )
     fig.update_yaxes(
+        title=dict(text='Absorbance', font=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=12, color=text_color)),
+        tickfont=dict(family="Google Sans Flex, Arial, Helvetica, sans-serif", size=10, color=text_color),
         showgrid=True, 
         gridwidth=0.8, 
         gridcolor=grid_color,
+        showline=True,
+        linewidth=axis_line_width,
         linecolor=border_color,
         mirror=True,
-        ticks="inside"
+        ticks="inside",
+        tickcolor=border_color,
+        tickwidth=axis_line_width
     )
     
     return fig
