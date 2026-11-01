@@ -260,7 +260,13 @@ def batch_deconvolve_series(
         if baseline_type == "Linear":
             baseline = linear_baseline(x_crop, y_raw_crop)
         elif baseline_type == "Polynomial":
-            baseline = polynomial_baseline(x_crop, y_raw_crop, degree=poly_deg)
+            b_mask = None
+            if dye_config and hasattr(dye_config, 'baseline_mask_fn') and dye_config.baseline_mask_fn:
+                try:
+                    b_mask = dye_config.baseline_mask_fn(x_crop)
+                except Exception:
+                    b_mask = None
+            baseline = polynomial_baseline(x_crop, y_raw_crop, mask=b_mask, degree=poly_deg)
         elif baseline_type == "ALS":
             baseline = als_baseline(y_raw_crop, lam=als_lam, p=als_p)
         else:

@@ -1,6 +1,6 @@
 """
 ===============================================================================
-DyeFit Interactive Dashboard (app.py) - Version 1.1.0
+DyeFit Interactive Dashboard (app.py) - Version 1.1.1
 ===============================================================================
 This is the main application file that implements the interactive web dashboard
 using Streamlit. 
@@ -21,8 +21,21 @@ import numpy as np
 import pandas as pd
 import io
 import re
+import inspect
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+
+def st_plotly_chart(fig, **kwargs):
+    """Render Plotly figure with forward/backward compatibility across Streamlit versions."""
+    if "width" in inspect.signature(st.plotly_chart).parameters:
+        return st.plotly_chart(fig, width="stretch", **kwargs)
+    return st.plotly_chart(fig, use_container_width=True, **kwargs)
+
+def st_dataframe(data, **kwargs):
+    """Render DataFrame with forward/backward compatibility across Streamlit versions."""
+    if "width" in inspect.signature(st.dataframe).parameters:
+        return st.dataframe(data, width="stretch", **kwargs)
+    return st.dataframe(data, use_container_width=True, **kwargs)
 
 # Import core mathematical algorithms from the local dyefit package
 from dyefit import (
@@ -385,7 +398,22 @@ def render_single_spectrum_mode():
         
         if baseline_method == "Polynomial":
             poly_deg = st.sidebar.slider("Polynomial Degree", 1, 5, 2)
-            baseline = polynomial_baseline(x_cropped, y_cropped, degree=poly_deg)
+            st.sidebar.markdown("**Baseline Fitting Regions (nm)**")
+            if selected_dye not in ["Custom", "➕ Create Custom Preset"] and hasattr(config, 'baseline_mask_fn'):
+                st.sidebar.info(f"Default preset baseline ranges are active for {selected_dye}.")
+                baseline_mask = config.baseline_mask_fn(x_cropped)
+            elif selected_dye == "➕ Create Custom Preset" and hasattr(config, 'baseline_mask_fn'):
+                st.sidebar.info(f"Custom preset baseline values: <{custom_base_left} nm or >{custom_base_right} nm.")
+                baseline_mask = config.baseline_mask_fn(x_cropped)
+            else:
+                left_bound = st.sidebar.slider("Left Baseline Threshold", float(min_w), float(max_w), float(min_w + (max_w - min_w)*0.15))
+                right_bound = st.sidebar.slider("Right Baseline Threshold", float(min_w), float(max_w), float(max_w - (max_w - min_w)*0.15))
+                baseline_mask = (x_cropped < left_bound) | (x_cropped > right_bound)
+            
+            if not np.any(baseline_mask):
+                baseline_mask = np.ones_like(x_cropped, dtype=bool)
+
+            baseline = polynomial_baseline(x_cropped, y_cropped, mask=baseline_mask, degree=poly_deg)
         elif baseline_method == "Linear":
             baseline = linear_baseline(x_cropped, y_cropped)
         elif baseline_method == "ALS":
@@ -475,7 +503,7 @@ def render_single_spectrum_mode():
                 legend=dict(bgcolor=legend_bg, bordercolor=legend_border, borderwidth=1, font=dict(color=text_color)),
                 margin=dict(l=50, r=30, t=30, b=50)
             )
-            st.plotly_chart(fig_base, use_container_width=True)
+            st_plotly_chart(fig_base)
             
         with tab2:
             st.markdown(f"### Deconvoluted Spectral Profile ({model_type})")
@@ -502,7 +530,7 @@ def render_single_spectrum_mode():
                 c5.markdown(f"<div class='metric-card'><h4>Total AUC</h4><h2>{total_auc:.2f}</h2></div>", unsafe_allow_html=True)
                 
                 fig_fit = generate_plotly_fig(x_cropped, abs_corrected, y_fitted, individual_peaks, model_type, theme=plotly_theme)
-                st.plotly_chart(fig_fit, use_container_width=True)
+                st_plotly_chart(fig_fit)
                 
                 # Deconvoluted peaks breakdown table
                 st.markdown("#### Resolved Sub-Peak Characteristics")
@@ -517,7 +545,7 @@ def render_single_spectrum_mode():
                         "Peak Area (AUC)": f"{calculate_auc(x_cropped, individual_peaks[i]):.3f}",
                         "% of Total AUC": f"{(calculate_auc(x_cropped, individual_peaks[i]) / max(total_auc, 1e-12) * 100):.1f}%"
                     })
-                st.dataframe(pd.DataFrame(peak_records), use_container_width=True)
+                st_dataframe(pd.DataFrame(peak_records))
                 
             except Exception as e:
                 st.error(f"Curve fitting failed to converge: {e}")
@@ -550,15 +578,14 @@ def render_single_spectrum_mode():
                         
             if leaderboard:
                 ld_df = pd.DataFrame(leaderboard).sort_values(by="AIC")
-                st.dataframe(
+                st_dataframe(
                     ld_df.style.format({
                         "R² (Variance Explained)": "{:.4f}",
                         "RMSE": "{:.4f}",
                         "AIC": "{:.1f}",
                         "BIC": "{:.1f}"
                     }).highlight_min(subset=["AIC", "BIC", "RMSE"], color="#005f73")
-                      .highlight_max(subset=["R² (Variance Explained)"], color="#005f73"),
-                    use_container_width=True
+                      .highlight_max(subset=["R² (Variance Explained)"], color="#005f73")
                 )
                 
         with tab4:
@@ -861,7 +888,7 @@ def render_kinetic_mode():
         with ktab1:
             st.markdown("### Deconvolved Monomer AUC vs. Raw Absorbance Reaction Kinetics")
             fig_kin = generate_kinetic_plotly_fig(k_result, dye_name=selected_dye, theme=plotly_theme)
-            st.plotly_chart(fig_kin, use_container_width=True)
+            st_plotly_chart(fig_kin)
             
             st.info("""
             **Scientific Physical Chemistry Insight**:
@@ -875,7 +902,7 @@ def render_kinetic_mode():
             st.markdown("### Time-Resolved Spectral Overlay")
             st.markdown("Evolution of the absorption profile from initial reaction ($t=0$) through degradation.")
             fig_multi = generate_multi_spectrum_plotly_fig(wavelengths, spectra_dict, dye_name=selected_dye, theme=plotly_theme)
-            st.plotly_chart(fig_multi, use_container_width=True)
+            st_plotly_chart(fig_multi)
             
         # TAB 3: Single-Spectrum Time Inspector
         with ktab3:
@@ -890,14 +917,14 @@ def render_kinetic_mode():
             ind_peaks_t = fit_t['individual_peaks']
             
             fig_single_t = generate_plotly_fig(x_t, y_corr_t, y_fit_t, ind_peaks_t, model_type, theme=plotly_theme)
-            st.plotly_chart(fig_single_t, use_container_width=True)
+            st_plotly_chart(fig_single_t)
             
             st.markdown(f"**Parameters at $t = {t_choice}$ min**: Monomer AUC = `{fit_t['peak_aucs'][-1]:.3f}`, Dimer AUC = `{fit_t['peak_aucs'][0]:.3f}` (R² = `{calculate_r_squared(y_corr_t, y_fit_t):.4f}`)")
             
         # TAB 4: Tabular Breakdown
         with ktab4:
             st.markdown("### Tabular Kinetic Quantitation Summary")
-            st.dataframe(
+            st_dataframe(
                 df_sum.style.format({
                     "Time": "{:.1f}",
                     "Raw_A_max": "{:.4f}",
@@ -911,8 +938,7 @@ def render_kinetic_mode():
                     "Minus_ln_C_C0_Monomer": "{:.4f}",
                     "Fit_R2": "{:.4f}",
                     "Fit_RMSE": "{:.4f}"
-                }),
-                use_container_width=True
+                })
             )
             
         # TAB 5: Export Kinetic Package

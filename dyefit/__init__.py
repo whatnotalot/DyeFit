@@ -46,5 +46,5 @@ from .kinetics import (
     generate_kinetic_matplotlib_fig
 )
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __author__ = "DyeFit Developers"

@@ -16,7 +16,7 @@ from scipy.sparse.linalg import spsolve
 # =============================================================================
 # 1. POLYNOMIAL BASELINE METHOD
 # =============================================================================
-def polynomial_baseline(wavelength, absorbance, mask, degree=2):
+def polynomial_baseline(wavelength, absorbance, mask=None, degree=2):
     """
     Fits a polynomial of specified degree to baseline-only regions (indicated by 
     a boolean mask) and evaluates it across the entire wavelength range.
@@ -29,24 +29,34 @@ def polynomial_baseline(wavelength, absorbance, mask, degree=2):
     Args:
         wavelength (np.array): Wavelength vector (x-axis, nm).
         absorbance (np.array): Raw absorbance vector (y-axis).
-        mask (np.array of bool): True for background regions, False for peak absorption regions.
+        mask (np.array of bool or callable, optional): True for background regions, False for peak absorption regions.
+            If None, fits across all points.
         degree (int): Polynomial order (default is 2).
         
     Returns:
         np.array: Evaluated baseline curve across all wavelengths.
     """
+    wavelength = np.asarray(wavelength)
+    absorbance = np.asarray(absorbance)
+
+    if mask is None:
+        mask = np.ones_like(wavelength, dtype=bool)
+    elif callable(mask):
+        mask = mask(wavelength)
+    mask = np.asarray(mask, dtype=bool)
+
     # Filter out only the wavelengths and absorbance points belonging to the baseline
     x_base = wavelength[mask]
     y_base = absorbance[mask]
     
+    if len(x_base) == 0:
+        # If the mask is empty, return a flat baseline of zeros
+        return np.zeros_like(wavelength)
+
     # Fallback safety checks
     if len(x_base) < degree + 1:
         # If not enough data points exist for the requested degree, lower the degree
         degree = max(1, len(x_base) - 1)
-        
-    if len(x_base) == 0:
-        # If the mask is empty, return a flat baseline of zeros
-        return np.zeros_like(wavelength)
         
     # Fit coefficients using least-squares polynomial fit
     coeffs = np.polyfit(x_base, y_base, degree)
@@ -124,7 +134,7 @@ def als_baseline(y, lam=1e5, p=0.01, niter=10):
     
     # D is the second-order finite difference matrix.
     # It calculates the second derivative (curvature) of the baseline curve.
-    D = sparse.diags([1, -2, 1], [0, 1, 2], shape=(L - 2, L))
+    D = sparse.diags([1.0, -2.0, 1.0], [0, 1, 2], shape=(L - 2, L), dtype=float)
     
     # Initialize all weights to 1.0
     w = np.ones(L)
@@ -136,7 +146,7 @@ def als_baseline(y, lam=1e5, p=0.01, niter=10):
         
         # Formulate the system of equations (W + lam * D^T * D) * z = W * y
         # We use sparse matrices to solve this extremely fast (O(N) time).
-        A = W + lam * D.T @ D
+        A = (W + lam * D.T @ D).tocsc()
         z = spsolve(A, w * y)
         
         # Update weights: if the data is above the baseline (y > z), it's a peak, 
