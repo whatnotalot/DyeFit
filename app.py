@@ -317,6 +317,7 @@ def render_single_spectrum_mode():
         
         dye_options = list(st.session_state.session_dyes.keys()) + ["Custom", "➕ Create Custom Preset"]
         selected_dye = st.sidebar.selectbox("Select Dye Config Preset", dye_options)
+        st.sidebar.caption("📦 Registry: `dyes.json` (SemVer v1.1) • Isolated in session")
         
         if selected_dye == "➕ Create Custom Preset":
             st.sidebar.markdown("### 🛠️ Custom Preset Builder")
@@ -547,20 +548,35 @@ def render_single_spectrum_mode():
                     })
                 st_dataframe(pd.DataFrame(peak_records))
                 
+                with st.expander("🔒 Physicality Safeguards & Solver Constraints", expanded=False):
+                    st.markdown(
+                        """
+                        **Automated Bounded Non-Linear Regression (Trust-Region Reflective):**
+                        To prevent autonomous optimization algorithms or AI agents from converging on unphysical mathematical artifacts, DyeFit enforces hard parameter bounds:
+                        - **Non-Negative Amplitude ($A \\ge 10^{-4}$):** Eliminates inverted/negative absorption peaks.
+                        - **Non-Singular Peak Width ($w \\ge 0.1\\text{ nm}$):** Prevents zero-width Dirac delta spikes overfitting discrete noise.
+                        - **Bounded Center Migration:** Center wavelengths $\\lambda_0$ are constrained to $[\\lambda_{\\min} - 50, \\lambda_{\\max} + 50]\\text{ nm}$.
+                        - **Physical Shape Boundaries:** Lorentzian fraction $\\eta \\in [0, 1]$, Asymmetric skew $\\alpha \\in [-1, 1]$, and Voigt $\\gamma \\ge 0$.
+                        """
+                    )
+                
             except Exception as e:
                 st.error(f"Curve fitting failed to converge: {e}")
                 
         with tab3:
             st.markdown("### Objective Model Comparison Leaderboard")
-            st.markdown("Compare all peak profiles on this spectrum to select the mathematically superior model.")
+            st.markdown("Compare all peak profiles on this spectrum to evaluate goodness-of-fit, parameter parsimony, and computational latency.")
             
+            import time
             models_to_test = ["Gaussian", "Lorentzian", "Voigt", "Pseudo-Voigt", "Asymmetric Gaussian"]
             leaderboard = []
             
-            with st.spinner("Evaluating all mathematical models..."):
+            with st.spinner("Evaluating all mathematical models & timing convergence..."):
                 for m in models_to_test:
                     try:
+                        t_start = time.perf_counter()
                         popt_m, _, y_fit_m, _ = fit_spectrum(x_cropped, abs_corrected, m, num_peaks=num_peaks, custom_guesses=guesses)
+                        latency_ms = (time.perf_counter() - t_start) * 1000.0
                         num_params_total = get_num_params(m) * num_peaks
                         r2_m = calculate_r_squared(abs_corrected, y_fit_m)
                         rmse_m = calculate_rmse(abs_corrected, y_fit_m)
@@ -568,7 +584,9 @@ def render_single_spectrum_mode():
                         bic_m = calculate_bic(abs_corrected, y_fit_m, num_params_total)
                         leaderboard.append({
                             "Model Profile": m,
-                            "R² (Variance Explained)": r2_m,
+                            "Parameters (k)": num_params_total,
+                            "Latency (ms)": latency_ms,
+                            "R² (Variance)": r2_m,
                             "RMSE": rmse_m,
                             "AIC": aic_m,
                             "BIC": bic_m
@@ -577,16 +595,37 @@ def render_single_spectrum_mode():
                         pass
                         
             if leaderboard:
-                ld_df = pd.DataFrame(leaderboard).sort_values(by="AIC")
+                ld_df = pd.DataFrame(leaderboard).sort_values(by="AIC").reset_index(drop=True)
+                min_aic = ld_df["AIC"].min()
+                ld_df["ΔAIC"] = ld_df["AIC"] - min_aic
+                
+                # Reorder columns
+                display_cols = ["Model Profile", "Parameters (k)", "Latency (ms)", "R² (Variance)", "RMSE", "AIC", "ΔAIC", "BIC"]
+                ld_df = ld_df[display_cols]
+                
                 st_dataframe(
                     ld_df.style.format({
-                        "R² (Variance Explained)": "{:.4f}",
+                        "Parameters (k)": "{:d}",
+                        "Latency (ms)": "{:.2f}",
+                        "R² (Variance)": "{:.4f}",
                         "RMSE": "{:.4f}",
                         "AIC": "{:.1f}",
+                        "ΔAIC": "{:.1f}",
                         "BIC": "{:.1f}"
-                    }).highlight_min(subset=["AIC", "BIC", "RMSE"], color="#005f73")
-                      .highlight_max(subset=["R² (Variance Explained)"], color="#005f73")
+                    }).highlight_min(subset=["AIC", "ΔAIC", "BIC", "RMSE", "Latency (ms)"], color="#005f73")
+                      .highlight_max(subset=["R² (Variance)"], color="#005f73")
                 )
+                
+                # Parsimony Rule / Occam's Razor advisory
+                close_models = ld_df[ld_df["ΔAIC"] <= 2.0]
+                if len(close_models) > 1:
+                    simpler_model = close_models.sort_values(by=["Parameters (k)", "BIC"]).iloc[0]["Model Profile"]
+                    st.info(
+                        f"💡 **Information-Theoretic Decision Rule (Occam's Razor):** "
+                        f"Models with $\\Delta\\text{{AIC}} \\le 2.0$ have essentially indistinguishable empirical support. "
+                        f"Following the Principle of Parsimony (Burnham & Anderson), **{simpler_model}** is recommended "
+                        f"to prevent overfitting due to having fewer parameters and lower BIC penalty, unless specific line-broadening physics dictates otherwise."
+                    )
                 
         with tab4:
             st.markdown("### Publication & Archival Export")
@@ -616,6 +655,28 @@ def render_single_spectrum_mode():
                             "Area Under Curve (AUC)": calculate_auc(x_cropped, peak_y)
                         })
                     pd.DataFrame(param_export).to_excel(writer, sheet_name="Peak Parameters", index=False)
+                    
+                    import datetime
+                    import dyefit
+                    metadata_records = [
+                        {"Field": "DyeFit Software Version", "Value": f"v{dyefit.__version__}"},
+                        {"Field": "Analysis Mode", "Value": "Single Spectrum Deconvolution"},
+                        {"Field": "Active Preset / Dye", "Value": selected_dye},
+                        {"Field": "Crop Range (nm)", "Value": f"{min_w_val:.1f} - {max_w_val:.1f}"},
+                        {"Field": "Baseline Method", "Value": baseline_method},
+                        {"Field": "Deconvolution Model", "Value": model_type},
+                        {"Field": "Number of Peaks Resolved", "Value": num_peaks},
+                        {"Field": "Total Fitted Parameters (k)", "Value": get_num_params(model_type) * num_peaks},
+                        {"Field": "Optimization Solver", "Value": "SciPy curve_fit (Trust-Region Reflective 'trf')"},
+                        {"Field": "Physicality Constraints Enforced", "Value": "Amplitude >= 1e-4; FWHM >= 0.1 nm; Center in window bounds"},
+                        {"Field": "Goodness of Fit R^2", "Value": f"{r2:.5f}"},
+                        {"Field": "RMSE", "Value": f"{rmse:.5f}"},
+                        {"Field": "AIC", "Value": f"{aic_val:.2f}"},
+                        {"Field": "BIC", "Value": f"{bic_val:.2f}"},
+                        {"Field": "Total Integrated AUC", "Value": f"{total_auc:.4f}"},
+                        {"Field": "Execution Timestamp (UTC)", "Value": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+                    ]
+                    pd.DataFrame(metadata_records).to_excel(writer, sheet_name="Provenance & Metadata", index=False)
                     
                 st.download_button(
                     label="📥 Download Fit Report (Excel)",
@@ -923,7 +984,7 @@ def render_kinetic_mode():
             
         # TAB 4: Tabular Breakdown
         with ktab4:
-            st.markdown("### Tabular Kinetic Quantitation Summary")
+            st.markdown("### Tabular Kinetic Quantification Summary")
             st_dataframe(
                 df_sum.style.format({
                     "Time": "{:.1f}",
@@ -973,6 +1034,27 @@ def render_kinetic_mode():
                 for t in sorted_t:
                     spec_export_df[f"{t} min"] = spectra_dict[t]
                 spec_export_df.to_excel(writer, sheet_name="Raw Time-Series Spectra", index=False)
+                
+                # Sheet 4: Provenance & Archival Metadata
+                import datetime
+                import dyefit
+                k_meta = [
+                    {"Field": "DyeFit Software Version", "Value": f"v{dyefit.__version__}"},
+                    {"Field": "Analysis Mode", "Value": "Kinetic Time-Series Batch Deconvolution"},
+                    {"Field": "Reaction Dye System", "Value": selected_dye},
+                    {"Field": "Wavelength Window (nm)", "Value": f"{min_w:.1f} - {max_w:.1f}"},
+                    {"Field": "Baseline Correction Method", "Value": baseline_method},
+                    {"Field": "Peak Profile Model", "Value": model_type},
+                    {"Field": "Optimization Solver", "Value": "SciPy curve_fit (Trust-Region Reflective 'trf')"},
+                    {"Field": "Physicality Constraints Enforced", "Value": "Amplitude >= 1e-4; FWHM >= 0.1 nm; Center in window bounds"},
+                    {"Field": "Monomer Apparent Rate k", "Value": f"{k_mono:.5f} min^-1"},
+                    {"Field": "Monomer R^2", "Value": f"{r2_mono:.5f}"},
+                    {"Field": "Raw Nominal Rate k", "Value": f"{k_raw:.5f} min^-1"},
+                    {"Field": "Raw Nominal R^2", "Value": f"{r2_raw:.5f}"},
+                    {"Field": "Intrinsic Activity Bias Recovered", "Value": f"{rate_diff_pct:+.2f}%"},
+                    {"Field": "Execution Timestamp (UTC)", "Value": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+                ]
+                pd.DataFrame(k_meta).to_excel(writer, sheet_name="Provenance & Metadata", index=False)
                 
             st.download_button(
                 label="📥 Download Complete Kinetic Workbook (Excel)",
