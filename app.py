@@ -1,6 +1,6 @@
 """
 ===============================================================================
-DyeFit Interactive Dashboard (app.py) - Version 1.1.1
+DyeFit Interactive Dashboard (app.py) - Version 1.1.2
 ===============================================================================
 This is the main application file that implements the interactive web dashboard
 using Streamlit. 
@@ -39,6 +39,7 @@ def st_dataframe(data, **kwargs):
 
 # Import core mathematical algorithms from the local dyefit package
 from dyefit import (
+    __version__ as DYE_FIT_VERSION,
     get_dye_config,
     DYE_REGISTRY,
     polynomial_baseline,
@@ -157,7 +158,7 @@ except Exception:
     pass
 
 if not is_embedded:
-    st.markdown("<h1 class='custom-title'>DyeFit <span style='font-size:1.1rem; color:#00D2FF; font-weight:400;'>v1.1.0</span></h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 class='custom-title'>DyeFit <span style='font-size:1.1rem; color:#00D2FF; font-weight:400;'>v{DYE_FIT_VERSION}</span></h1>", unsafe_allow_html=True)
     st.markdown("<p class='custom-subtitle'>Spectroscopic Fitting & Kinetic Quantification Agent</p>", unsafe_allow_html=True)
     
     with st.expander("📖 How to Use & Scientific Guide", expanded=False):
@@ -317,7 +318,7 @@ def render_single_spectrum_mode():
         
         dye_options = list(st.session_state.session_dyes.keys()) + ["Custom", "➕ Create Custom Preset"]
         selected_dye = st.sidebar.selectbox("Select Dye Config Preset", dye_options)
-        st.sidebar.caption("📦 Registry: `dyes.json` (SemVer v1.1) • Isolated in session")
+        st.sidebar.caption("📦 Registry: `dyes.json` (SemVer v1.1.2) • Isolated in session")
         
         if selected_dye == "➕ Create Custom Preset":
             st.sidebar.markdown("### 🛠️ Custom Preset Builder")
